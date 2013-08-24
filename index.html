@@ -1,0 +1,35 @@
+<html ng-app="foo"> <!-- The module name here is very important //-->
+  <head>
+    <title>Tiny Angular.js + SSE Example</title>
+    <script src="http://code.angularjs.org/1.0.7/angular.min.js"></script>
+  </head>
+  <body>
+    <div ng-controller="FooCtrl">
+      <ul>
+        <li ng-repeat="bar in foos">{{ bar.value }}</li>
+      </ul>
+    </div>
+  </body>
+  <script>
+    angular.module('foo', []).factory('sse', function($rootScope) {
+      var sse = new EventSource('/stream');
+      return {
+        addEventListener: function(eventName, callback) {
+          sse.addEventListener(eventName, function() {
+            var args = arguments;
+            $rootScope.$apply(function () {
+              callback.apply(sse, args);
+            });
+          });
+        }
+      };
+    });
+    function FooCtrl($scope, sse) {
+      $scope.foos = [];
+      sse.addEventListener('message', function (e) {
+        $scope.foos.push({value: e.data});
+      });
+    }
+  </script>
+</html>
+
